@@ -8,7 +8,6 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path("api/v1/", include(router.urls)),
-    path('api/v1/optimize/', views.optimizeData, name='optimize'),
-    path('api/v1/process-data/', views.processData, name='process_data'),
+    path('api/v1/optimize/', views.optimizeScript, name='optimize'),
     path('docs/', include_docs_urls(title="Optimization API"))
 ]

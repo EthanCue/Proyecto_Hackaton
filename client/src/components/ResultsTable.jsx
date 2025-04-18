@@ -1,68 +1,65 @@
 import { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-export function ResultsTable({ optimizedExcelBlob }) {
-  const [excelData, setExcelData] = useState([]);
-  const [downloadUrl, setDownloadUrl] = useState(null);
+function downloadExcel(data) {
+  const ws = XLSX.utils.json_to_sheet(data);  // Convierte los datos JSON a una hoja
+  const wb = XLSX.utils.book_new();           // Crea un libro de trabajo
+  XLSX.utils.book_append_sheet(wb, ws, 'Optimized Data');  // Añade la hoja al libro
+  XLSX.writeFile(wb, 'optimized_data.xlsx');  // Descarga el archivo Excel
+}
 
-  useEffect(() => {
-    if (optimizedExcelBlob) {
-      // Crear URL para descarga
-      const url = URL.createObjectURL(optimizedExcelBlob);
-      setDownloadUrl(url);
+export function ResultsTable() {
+  const location = useLocation();
+  const { optimizedData } = location.state || {};  // Recibimos los datos optimizados
 
-      // Leer el archivo con SheetJS
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        setExcelData(jsonData);
-      };
-      reader.readAsArrayBuffer(optimizedExcelBlob);
-    }
-  }, [optimizedExcelBlob]);
+  // Verificar que optimizedData es un objeto y tiene la clave "optimized_excel_file"
+  if (!optimizedData || !optimizedData.optimized_excel_file) {
+    return <p>No optimized data available.</p>;
+  }
+
+  // Extraer las columnas del objeto
+  const columns = Object.keys(optimizedData.optimized_excel_file);
+  const rowsLength = optimizedData.optimized_excel_file[columns[0]].length;
+
+  // Convertir los datos en un formato adecuado para la tabla
+  const transformedData = Array.from({ length: rowsLength }, (_, index) => {
+    const row = {};
+    columns.forEach((col) => {
+      row[col] = optimizedData.optimized_excel_file[col][index];
+    });
+    return row;
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        {downloadUrl && (
-          <a
-            href={downloadUrl}
-            download="optimized_results.xlsx"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Download Excel
-          </a>
-        )}
-      </div>
+    <div className="p-6">
+      <h2 className="text-xl font-semibold mb-4">Optimized Results</h2>
 
-      <div className="overflow-x-auto shadow rounded">
-        <table className="min-w-full border border-gray-300 table-auto">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-4 py-2">Product</th>
-              <th className="border px-4 py-2">Period</th>
-              <th className="border px-4 py-2">Production</th>
+      <div className="overflow-x-auto">
+        <table className="table-auto w-full border">
+          <thead>
+            <tr className="bg-gray-200">
+              {/* Comprobamos si hay datos y renderizamos los encabezados de la tabla */}
+              {columns.map((key) => (
+                <th key={key} className="border px-4 py-2">{key}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {excelData.map((row, idx) => (
-              <tr key={idx}>
-                <td className="border px-4 py-2">{row.product}</td>
-                <td className="border px-4 py-2">{row.period}</td>
-                <td className="border px-4 py-2">{row.production}</td>
+            {/* Mapeamos cada fila y sus valores */}
+            {transformedData.map((row, index) => (
+              <tr key={index} className="hover:bg-gray-100">
+                {Object.values(row).map((val, i) => (
+                  <td key={i} className="border px-4 py-2">{val}</td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
+        <button onClick={() => downloadExcel(transformedData)} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded">
+          Descargar Excel
+        </button>
       </div>
     </div>
   );
 }
-
-ResultsTable.propTypes = {
-  optimizedExcelBlob: PropTypes.instanceOf(Blob).isRequired,
-};

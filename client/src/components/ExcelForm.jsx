@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { processData, optimize } from "../api/optimize.api";
+import { optimize } from "../api/optimize.api";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from 'react';
@@ -32,27 +32,26 @@ export function ExcelForm() {
     }
 
     try {
-      const response = await processData(formData);
-      console.log(response);
+      const optimizedData = await optimize(formData); // blob
+      console.log("optimized data: ", optimizedData);  // Esto debe mostrar las filas que retornaste
 
-      toast.success("Data succesfully processed", {
+      //const fileUrl = URL.createObjectURL(optimizedData);
+    
+      // Enviar a vista de resultados con el blob URL
+      navigate("/optimal-data", {
+        state: {
+          //optimizedDataUrl: fileUrl,
+          optimizedData,
+        },
+      });
+    
+      toast.success("Data successfully processed", {
         position: "bottom-right",
         style: { background: "#101010", color: "#fff" },
       });
-
-      try {
-        const optimalData = await optimize(response);
-        console.log(optimalData);
-
-        navigate("/optimal-data", {
-          state: { optimalData },
-        });
-      } catch (error) {
-        console.error(error);
-        toast.error("Error getting optimal data");
-      }
     } catch (error) {
-      toast.error("Error procesing data");
+      console.error(error);
+      toast.error("Error processing data");
     } finally {
       setLoading(false);
     }

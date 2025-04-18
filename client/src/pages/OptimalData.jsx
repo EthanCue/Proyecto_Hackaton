@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ResultsTable } from "../components/ResultsTable";
 
 export function OptimalData() {
 
@@ -16,6 +17,7 @@ export function OptimalData() {
           </div>
         </div>
       </header>
+      <ResultsTable />
       <div className="flex justify-center items-center max-w-xl mx-auto pt-5">
         <Link to="/user-welcome">
           <button className="bg-white text-black px-3 py-2 rounded-lg w-52">
