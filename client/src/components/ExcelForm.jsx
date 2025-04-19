@@ -32,8 +32,8 @@ export function ExcelForm() {
     }
 
     try {
-      const { optimized_excel_file, pareto } = await optimize(formData); // blob
-      console.log("Plan:", optimized_excel_file);
+      const { optimizedData, pareto } = await optimize(formData); // blob
+      console.log("Plan:", optimizedData);
       console.log("Pareto:", pareto);
   
       //const fileUrl = URL.createObjectURL(optimizedData);
@@ -42,7 +42,7 @@ export function ExcelForm() {
       navigate("/optimal-data", {
         state: {
           //optimizedDataUrl: fileUrl,
-          optimized_excel_file,
+          optimizedData,
           pareto
         },
       });

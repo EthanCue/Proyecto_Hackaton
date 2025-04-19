@@ -31,7 +31,7 @@ def optimizeScript(request):
         cleaned_pareto_df = pareto_df.replace([np.nan, np.inf, -np.inf], None)
 
         return Response({
-            "optimized_excel_file": optimized_data,
+            "optimizedData": optimized_data,
             "pareto": cleaned_pareto_df.to_dict(orient='records')
         })
     except Exception as e:

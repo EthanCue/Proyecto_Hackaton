@@ -15,63 +15,76 @@ export function ResultsTable() {
   const { optimizedData } = location.state || {};
   const { pareto } = location.state || {};
 
-  if (!optimizedData || !optimizedData.optimized_excel_file) {
+  if (!location.state || !location.state.optimizedData) {
+    return <p>Error: No data was passed to this page.</p>;
+  }
+
+  if (!optimizedData) {
     return <p>No optimized data available.</p>;
   }
 
-  const columns = Object.keys(optimizedData.optimized_excel_file);
-  const rowsLength = optimizedData.optimized_excel_file[columns[0]].length;
+  if (!pareto) {
+    return <p>No pareto available.</p>;
+  }
 
-  const transformedOptimized = Array.from({ length: rowsLength }, (_, index) => {
-    const row = {};
-    columns.forEach((col) => {
-      row[col] = optimizedData.optimized_excel_file[col][index];
-    });
-    return row;
-  });
+  const columns = Object.keys(optimizedData);
+  const rowsLength = optimizedData[columns[0]].length;
 
-  // Si existe pareto, transformarlo
+  const transformedOptimized = Array.from(
+    { length: rowsLength },
+    (_, index) => {
+      const row = {};
+      columns.forEach((col) => {
+        row[col] = optimizedData[col][index];
+      });
+      return row;
+    }
+  );
+
   let transformedPareto = [];
-  if (pareto) {
-    const paretoColumns = Object.keys(pareto);
-    const paretoRowsLength = pareto[paretoColumns[0]]?.length || 0;
+  let paretoColumns = [];
+
+  if (pareto && pareto.length > 0) {
+    paretoColumns = Object.keys(pareto[0]);
+    const paretoRowsLength = pareto.length;
 
     transformedPareto = Array.from({ length: paretoRowsLength }, (_, index) => {
       const row = {};
       paretoColumns.forEach((col) => {
-        row[col] = pareto[col][index];
+        row[col] = pareto[index][col];
       });
       return row;
     });
   }
-  
+
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold mb-2 text-center">Optimized Results</h2>
-      <div className="flex justify-center items-center max-w-xl mx-auto pb-3">
+      <h2 className="text-xl font-semibold mb-2 text-center">
+        Optimized Results
+      </h2>
+      <div className="flex justify-center items-center max-w-2/3 mx-auto pb-3">
         <button
           onClick={() => downloadExcel(transformedOptimized, "optimized_data")}
-          className="bg-green-600 px-3 py-2 rounded-l-lg mr-0.5 w-52"
+          className="bg-green-600 px-3 py-2 rounded-l-lg mr-0.5 flex-1"
         >
           Download Optimized Data
         </button>
         <button
           onClick={() => downloadExcel(transformedPareto, "pareto_data")}
-          className="bg-green-600 px-3 py-2 rounded-none mr-0.5 w-52"
-          disabled={transformedPareto.length === 0}
+          className="bg-green-600 px-3 py-2 rounded-r-lg ml-0.5 flex-1"
         >
           Download Pareto
         </button>
-        <Link to="/user-welcome">
-          <button className="bg-white text-black px-3 py-2 rounded-r-lg ml-0.5 w-52">
+      </div>
+      <div className="flex justify-center items-center max-w-2/3 mx-auto pb-3">
+        <Link to="/user-welcome" className="flex-1">
+          <button className="bg-white text-black px-3 py-2 rounded-lg ml-0.5 w-full">
             Enter a new dataset
           </button>
         </Link>
       </div>
-      {/*
-      
-      <div className="overflow-x-auto">
-        <table className="table-auto w-1/2 border mx-auto">
+      <div className="flex justify-center space-x-4 overflow-x-auto">
+        <table className="table-auto w-1/3 border">
           <thead>
             <tr>
               {columns.map((key) => (
@@ -82,7 +95,29 @@ export function ResultsTable() {
             </tr>
           </thead>
           <tbody>
-            {transformedData.map((row, index) => (
+            {transformedOptimized.map((row, index) => (
+              <tr key={index} className="hover:bg-gray-500">
+                {Object.values(row).map((val, i) => (
+                  <td key={i} className="border px-4 py-2 text-center">
+                    {val}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <table className="table-auto w-1/3 border pl-4">
+          <thead>
+            <tr>
+              {paretoColumns.map((key) => (
+                <th key={key} className="border px-4 py-2 bg-neutral-600">
+                  {key}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {transformedPareto.map((row, index) => (
               <tr key={index} className="hover:bg-gray-500">
                 {Object.values(row).map((val, i) => (
                   <td key={i} className="border px-4 py-2 text-center">
@@ -94,7 +129,6 @@ export function ResultsTable() {
           </tbody>
         </table>
       </div>
-      */}
     </div>
   );
 }
