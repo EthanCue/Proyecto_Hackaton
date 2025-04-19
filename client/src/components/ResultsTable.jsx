@@ -48,6 +48,8 @@ export function ResultsTable() {
           </button>
         </Link>
       </div>
+      {/*
+      
       <div className="overflow-x-auto">
         <table className="table-auto w-1/2 border mx-auto">
           <thead>
@@ -72,6 +74,7 @@ export function ResultsTable() {
           </tbody>
         </table>
       </div>
+      */}
     </div>
   );
 }

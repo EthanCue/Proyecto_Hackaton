@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pulp as lp
 
-import Bus_lex as lex
-import Suma_ponderada_funciones as wsum
+from . import Bus_lex as lex
+from . import Suma_ponderada_funciones as wsum
 
 # Aseguramos que la salida soporte UTF‑8 para imprimir caracteres especiales
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -91,7 +91,7 @@ def scatter_face(points: List[dict], vx: str, vy: str, title: str) -> None:
 
 # 3.2  Modelo lexicográfico ------------------------------------------------
 
-def run_lexicographic(alpha: float) -> Tuple[float, float, pd.DataFrame]:
+def run_lexicographic(alpha: float, excel_file: str) -> Tuple[float, float, pd.DataFrame]:
     """
     Resuelve la Fase 2 del modelo lexicográfico.
     Devuelve:
@@ -100,7 +100,7 @@ def run_lexicographic(alpha: float) -> Tuple[float, float, pd.DataFrame]:
       - DataFrame con la planificación óptima: columnas ['Product','Period','Production']
     """
     # Cargar y preprocesar
-    df_sd, df_bc = lex.load_data(lex.excel_file)
+    df_sd, df_bc = lex.load_data(excel_file)
     P, T, D, SST, EEX, Cap = lex.preprocess_data(df_sd, df_bc)
 
     # --- Fase 1: coste mínimo f★ ---
@@ -151,9 +151,9 @@ def run_lexicographic(alpha: float) -> Tuple[float, float, pd.DataFrame]:
 
 # 3.3  Modelo weighted‑sum --------------------------------------------------
 
-def run_weighted(ws: float, wc: float = WC, alpha: float = ALPHA) -> Tuple[float, float]:
+def run_weighted(ws: float, excel_file: str, wc: float = WC, alpha: float = ALPHA) -> Tuple[float, float]:
     """Ejecuta weighted‑sum y devuelve (coste_total, service_level)."""
-    df_sd, df_bc = wsum.load_data(wsum.excel_file)
+    df_sd, df_bc = wsum.load_data(excel_file)
     P, T, D, SST, EEX, Cap = wsum.preprocess_data(df_sd, df_bc)
 
     m = lp.LpProblem("weighted_sum", lp.LpMinimize)
@@ -204,10 +204,10 @@ def plot_pareto(pareto_df: pd.DataFrame) -> None:
 
 # 3.5  Función main() --------------------------------------------------------
 
-def main() -> None:
+def main(input_excel) -> None:
     # --- Lexicográfico ---
     print(f">>> Ejecutando lexicográfico con α={ALPHA:.2f} …")
-    cost_lex, srv_lex, plan_df = run_lexicographic(ALPHA)
+    cost_lex, srv_lex, plan_df = run_lexicographic(ALPHA, input_excel)
     print(f"   Coste           : {cost_lex:,.2f}")
     print(f"   Service level   : {srv_lex:.4f}\n")
 
@@ -221,7 +221,7 @@ def main() -> None:
     print(">>> Explorando weighted‑sum en distintos w_s …")
     results = []
     for ws in WS_VALUES:
-        cost, srv = run_weighted(ws)
+        cost, srv = run_weighted(ws, input_excel)
         print(f"   w_s={ws:<5}: coste={cost:,.2f}  service={srv:.4f}")
         results.append({"model": "ws", "w_s": ws, "cost": cost, "service": srv})
 
@@ -238,3 +238,26 @@ def main() -> None:
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
+
+def optimize_from_excel(input_excel) -> dict:
+    """Ejecuta la optimización a partir de un archivo Excel y devuelve los resultados clave como diccionario."""
+    cost_lex, srv_lex, plan_df = run_lexicographic(ALPHA, input_excel)
+
+    results = []
+    for ws in WS_VALUES:
+        cost, srv = run_weighted(ws, input_excel)
+        results.append({"model": "ws", "w_s": ws, "cost": cost, "service": srv})
+
+    results.append({"model": "lex", "w_s": None, "cost": cost_lex, "service": srv_lex})
+
+    cost_lex, srv_lex, plan_df = run_lexicographic(ALPHA, input_excel)
+    print(f"   Coste           : {cost_lex:,.2f}")
+    print(f"   Service level   : {srv_lex:.4f}\n")
+
+    # Imprimir planificación y guardar Excel
+    print(">>> Planificación óptima (lexicográfico):")
+    print(plan_df.to_string(index=False))
+    plan_df.to_excel("Plan_de_Produccion_Lexico.xlsx", index=False)
+    
+    # Regresar el DataFrame actualizado
+    return plan_df

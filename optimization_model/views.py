@@ -1,8 +1,4 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework import viewsets
-from rest_framework.decorators import api_view, parser_classes
-from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .utils.optimize import optimize_data
 from django.http import JsonResponse
@@ -10,8 +6,9 @@ from django.http import JsonResponse
 import pandas as pd
 import numpy as np
 
-from .utils import optimize
-#from .utils import Script_Maestro, optimize, Suma_ponderada_funciones, Bus_lex
+from .utils import Script_Maestro, optimize, Suma_ponderada_funciones, Bus_lex
+
+from .utils.Script_Maestro import optimize_from_excel
 
 @api_view(['POST'])
 def optimizeScript(request):
@@ -28,9 +25,9 @@ def optimizeScript(request):
         return JsonResponse({"error": "Invalid file type. Please upload an Excel file."}, status=400)
 
     try:
-        optimized_excel_file = optimize_data(df)
+        optimized_data = optimize_from_excel(excel_file)
 
-        return Response({"optimized_excel_file": optimized_excel_file})  # 👈 aquí usas Response correctamente
+        return Response({"optimized_excel_file": optimized_data})
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
