@@ -25,9 +25,14 @@ def optimizeScript(request):
         return JsonResponse({"error": "Invalid file type. Please upload an Excel file."}, status=400)
 
     try:
-        optimized_data = optimize_from_excel(excel_file)
+        optimized_data, pareto_df = optimize_from_excel(excel_file)
 
-        return Response({"optimized_excel_file": optimized_data})
+        # Reemplaza NaN, inf y -inf por None (null en JSON)
+        cleaned_pareto_df = pareto_df.replace([np.nan, np.inf, -np.inf], None)
 
+        return Response({
+            "optimized_excel_file": optimized_data,
+            "pareto": cleaned_pareto_df.to_dict(orient='records')
+        })
     except Exception as e:
         return Response({"error": str(e)}, status=500)

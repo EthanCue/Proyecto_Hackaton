@@ -32,16 +32,18 @@ export function ExcelForm() {
     }
 
     try {
-      const optimizedData = await optimize(formData); // blob
-      console.log("optimized data: ", optimizedData);  // Esto debe mostrar las filas que retornaste
-
+      const { optimized_excel_file, pareto } = await optimize(formData); // blob
+      console.log("Plan:", optimized_excel_file);
+      console.log("Pareto:", pareto);
+  
       //const fileUrl = URL.createObjectURL(optimizedData);
     
       // Enviar a vista de resultados con el blob URL
       navigate("/optimal-data", {
         state: {
           //optimizedDataUrl: fileUrl,
-          optimizedData,
+          optimized_excel_file,
+          pareto
         },
       });
     

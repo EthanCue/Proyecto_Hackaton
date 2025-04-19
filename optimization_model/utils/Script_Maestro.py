@@ -246,9 +246,14 @@ def optimize_from_excel(input_excel) -> dict:
     results = []
     for ws in WS_VALUES:
         cost, srv = run_weighted(ws, input_excel)
+        print(f"   w_s={ws:<5}: coste={cost:,.2f}  service={srv:.4f}")
+
         results.append({"model": "ws", "w_s": ws, "cost": cost, "service": srv})
 
     results.append({"model": "lex", "w_s": None, "cost": cost_lex, "service": srv_lex})
+    df_pareto = pd.DataFrame(results)
+    df_pareto.to_csv("pareto_results.csv", index=False)
+    print("\nResultados guardados en pareto_results.csv\n")
 
     cost_lex, srv_lex, plan_df = run_lexicographic(ALPHA, input_excel)
     print(f"   Coste           : {cost_lex:,.2f}")
@@ -260,4 +265,4 @@ def optimize_from_excel(input_excel) -> dict:
     plan_df.to_excel("Plan_de_Produccion_Lexico.xlsx", index=False)
     
     # Regresar el DataFrame actualizado
-    return plan_df
+    return plan_df, df_pareto

@@ -7,7 +7,7 @@ const optimizeApi = axios.create({
 export const optimize = async (data) => {
   try {
     const response = await optimizeApi.post("optimize/", data);
-    return response.data;  // No blob, sino JSON
+    return response.data;
   } catch (error) {
     console.error("Error getting optimal data:", error.response || error);
     throw error;
